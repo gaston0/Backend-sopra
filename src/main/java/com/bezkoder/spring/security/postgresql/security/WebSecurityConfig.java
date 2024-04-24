@@ -1,27 +1,24 @@
 package com.bezkoder.spring.security.postgresql.security;
 
+import com.bezkoder.spring.security.postgresql.security.jwt.AuthEntryPointJwt;
+import com.bezkoder.spring.security.postgresql.security.jwt.AuthTokenFilter;
+import com.bezkoder.spring.security.postgresql.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.bezkoder.spring.security.postgresql.security.jwt.AuthEntryPointJwt;
-import com.bezkoder.spring.security.postgresql.security.jwt.AuthTokenFilter;
-import com.bezkoder.spring.security.postgresql.security.services.UserDetailsServiceImpl;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableMethodSecurity
@@ -30,7 +27,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 // prePostEnabled = true) // by default
 @EnableSwagger2
 
-public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig implements WebMvcConfigurer{ // extends WebSecurityConfigurerAdapter {
   private boolean swaggerEnabled;
   @Autowired
   UserDetailsServiceImpl userDetailsService;
@@ -56,6 +53,12 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
       authProvider.setPasswordEncoder(passwordEncoder());
    
       return authProvider;
+  }
+  public void addCorsMappings(CorsRegistry registry) {
+    registry.addMapping("/**")
+            .allowedOrigins("*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedHeaders("*");
   }
 
 //  @Bean
@@ -92,7 +95,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(this.unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(authorize -> authorize
-                    .antMatchers("/api/auth/**", "/api/test/**").permitAll()
+                    .antMatchers("/api/**", "/api/test/**").permitAll()
                     .antMatchers("/v2/api-docs", "/configuration/**", "/swagger*/**", "/webjars/**").permitAll()
                     .anyRequest().authenticated()
 
